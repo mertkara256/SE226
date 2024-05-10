@@ -118,9 +118,6 @@ def submit():
         price_element = hotel.find('span', {'data-testid': 'price-and-discounted-price'})
         price = price_element.text.strip() if price_element else "Not available"
 
-        
-        # Convert price to TL if the selected currency is TL
-       # Convert price to TL if the selected currency is TL
         # Convert price to TL if the selected currency is TL
         if units == 'TL' and price != "Not available":  
             # Strip the "€" sign and any spaces
@@ -130,8 +127,6 @@ def submit():
             # Convert and round to two decimal places
             price_tl = round(price_numeric * 30, 2)
             price = f"{price_tl} TL"
-
-
 
             
         # Append hotel data to dictionary
