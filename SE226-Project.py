@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 from datetime import datetime
 import os
+import tkinter.messagebox as messagebox
 
 root = tk.Tk()
 root.title("Hotel Booking App")
@@ -62,8 +63,12 @@ def submit():
     units = units_var.get()
 
     # Convert check-in and check-out dates to the desired format (YYYY-MM-DD)
-    checkin_date = datetime.strptime(checkin_date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
-    checkout_date = datetime.strptime(checkout_date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+    try:
+        checkin_date = datetime.strptime(checkin_date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+        checkout_date = datetime.strptime(checkout_date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        messagebox.showerror("Error", "Invalid date format. Please enter dates in DD/MM/YYYY format.")
+        return
 
     # For demonstration purposes, let's print the user inputs
     print("City:", city)
@@ -72,16 +77,20 @@ def submit():
     print("Units:", units)
 
     # URL for the query always using Euro as the currency
-    try:
-        url = f'https://www.booking.com/searchresults.tr.html?ss={city}&checkin={checkin_date}&checkout={checkout_date}&group_adults=2&no_rooms=1&group_children=0&selected_currency=EUR'
-    except Exception as e:
-        print("No internet connection")
+    
+    url = f'https://www.booking.com/searchresults.tr.html?ss={city}&checkin={checkin_date}&checkout={checkout_date}&group_adults=2&no_rooms=1&group_children=0&selected_currency=EUR'
+
     headers = {
     'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36',
     'Accept-Language': 'en-US,en;q=0.5'
     }
 
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an error for bad responses (4xx or 5xx)
+    except requests.RequestException as e:
+        messagebox.showerror("Error", f"Failed to fetch data from the server, make sure you have internet connection.")
+        return
     soup = BeautifulSoup(response.text, 'html.parser')
     hotels = soup.findAll('div', {'data-testid': 'property-card'})
 
