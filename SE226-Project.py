@@ -1,64 +1,60 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import re
-from bs4 import BeautifulSoup
-import requests
-import pandas as pd
 from datetime import datetime
+import re
 import os
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
 import csv
 
-# Function to extract points from hotel data
-def extract_points(hotel):
-    # Extract numeric parts using regular expression
-    numbers = re.findall(r'\d+', hotel['Points'])
-    if numbers:
-        points_str = ''.join(numbers)  # Merge all numeric parts
-        return int(points_str)  # Convert merged string to integer
-    return float('-inf')  # Return negative infinity if no numbers found
+# Create main application window
+root = tk.Tk()
+root.title("Hotel Booking App")
 
-# Function to display hotel data in a new window
-def show_hotel_data(hotels_data):
-    # Sort hotels based on extracted points in descending order
-    sorted_hotels = sorted(hotels_data, key=lambda x: extract_points(x), reverse=True)
-    
-    # Create hotel window
-    hotel_window = tk.Toplevel(root)
-    hotel_window.title("Hotel Attributes")
-    
-    # Create treeview to display hotel data
-    tree = ttk.Treeview(hotel_window)
-    tree['columns'] = ('Name', 'Points', 'Address', 'Distance to Center', 'Price')
-    tree.heading('#0', text='Index')
-    tree.heading('Name', text='Name')
-    tree.heading('Points', text='Points')
-    tree.heading('Address', text='Address')
-    tree.heading('Distance to Center', text='Distance to Center')
-    tree.heading('Price', text='Price')
+# List of 10 random European cities
+european_cities = [
+    "Paris", "London", "Berlin", "Madrid", "Rome",
+    "Amsterdam", "Vienna", "Prague", "Athens", "Lisbon"
+]
 
-    # Insert hotel data into treeview
-    for i, hotel in enumerate(sorted_hotels):
-        tree.insert('', 'end', text=str(i+1), values=(hotel['Name'], hotel['Points'], hotel['Address'], hotel['Distance to Center'], hotel['Price']))
-        if (i==4):
-            break
+# City Selection
+city_label = ttk.Label(root, text="Select City:")
+city_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+city_var = tk.StringVar()
+city_dropdown = ttk.Combobox(root, textvariable=city_var)
+city_dropdown.grid(row=0, column=1, padx=10, pady=5)
+city_dropdown['values'] = european_cities
 
-    tree.pack(expand=True, fill='both')
+# Check-in Date Entry
+checkin_label = ttk.Label(root, text="Check-in Date:")
+checkin_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+checkin_entry = ttk.Entry(root)
+checkin_entry.grid(row=1, column=1, padx=10, pady=5)
 
-# Function to save hotel data to a CSV file
-def save_to_csv(hotels_data):
-    # Define the file path
-    file_path = "hotels_data.csv"
+# Check-out Date Entry
+checkout_label = ttk.Label(root, text="Check-out Date:")
+checkout_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+checkout_entry = ttk.Entry(root)
+checkout_entry.grid(row=2, column=1, padx=10, pady=5)
 
-    # Define the fieldnames for the CSV file
-    fieldnames = ['Name', 'Points', 'Address', 'Distance to Center', 'Price']
+# Currency Selection
+units_label = ttk.Label(root, text="Select Currency:")
+units_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+units_var = tk.StringVar(value="Euro")
+euro_radio = ttk.Radiobutton(root, text="Euro", variable=units_var, value="Euro")
+euro_radio.grid(row=3, column=1, padx=10, pady=5, sticky="w")
+tl_radio = ttk.Radiobutton(root, text="TL", variable=units_var, value="TL")
+tl_radio.grid(row=4, column=1, padx=10, pady=5, sticky="w")
 
-    # Write data to CSV file
-    with open(file_path, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        for hotel in hotels_data:
-            writer.writerow(hotel)
+# Function to validate date format
+def check_date_format(new_value):
+    return re.match(r'^\d{2}/\d{2}/\d{4}$', new_value) is not None
+
+validate_date = root.register(check_date_format)
+checkin_entry.config(validate="focusout", validatecommand=(validate_date, "%P"))
+checkout_entry.config(validate="focusout", validatecommand=(validate_date, "%P"))
 
 # Function to handle form submission
 def submit():
@@ -85,7 +81,7 @@ def submit():
 
     try:
         response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Error if theres no internet
+        response.raise_for_status()  # Error if there's no internet
     except requests.RequestException as e:
         messagebox.showerror("Error", f"Failed to fetch data from the server, make sure you have an internet connection.")
         return
@@ -143,53 +139,45 @@ def submit():
     # Save data to CSV file
     save_to_csv(hotels_data)
 
-# Create main application window
-root = tk.Tk()
-root.title("Hotel Booking App")
+# Function to extract points from hotel data
+def extract_points(hotel):
+    numbers = re.findall(r'\d+', hotel['Points'])
+    if numbers:
+        points_str = ''.join(numbers)
+        return int(points_str)
+    return float('-inf')
 
-# List of 10 random European cities
-european_cities = [
-    "Paris", "London", "Berlin", "Madrid", "Rome",
-    "Amsterdam", "Vienna", "Prague", "Athens", "Lisbon"
-]
+# Function to display hotel data in a new window
+def show_hotel_data(hotels_data):
+    sorted_hotels = sorted(hotels_data, key=extract_points, reverse=True)
 
-# Create city selection label and dropdown
-city_label = ttk.Label(root, text="Select City:")
-city_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
-city_var = tk.StringVar()
-city_dropdown = ttk.Combobox(root, textvariable=city_var)
-city_dropdown.grid(row=0, column=1, padx=10, pady=5)
-city_dropdown['values'] = european_cities
+    hotel_window = tk.Toplevel(root)
+    hotel_window.title("Hotel Attributes")
 
-# Create check-in date label and entry
-checkin_label = ttk.Label(root, text="Check-in Date:")
-checkin_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-checkin_entry = ttk.Entry(root)
-checkin_entry.grid(row=1, column=1, padx=10, pady=5)
+    tree = ttk.Treeview(hotel_window)
+    tree['columns'] = ('Name', 'Points', 'Address', 'Distance to Center', 'Price')
+    tree.heading('#0', text='Index')
+    tree.heading('Name', text='Name')
+    tree.heading('Points', text='Points')
+    tree.heading('Address', text='Address')
+    tree.heading('Distance to Center', text='Distance to Center')
+    tree.heading('Price', text='Price')
 
-# Create check-out date label and entry
-checkout_label = ttk.Label(root, text="Check-out Date:")
-checkout_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
-checkout_entry = ttk.Entry(root)
-checkout_entry.grid(row=2, column=1, padx=10, pady=5)
+    for i, hotel in enumerate(sorted_hotels):
+        tree.insert('', 'end', text=str(i+1), values=(hotel['Name'], hotel['Points'], hotel['Address'], hotel['Distance to Center'], hotel['Price']))
+        if (i==4):
+            break
 
-# Create currency selection labels and radio buttons
-units_label = ttk.Label(root, text="Select Currency:")
-units_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
-units_var = tk.StringVar(value="Euro")
-euro_radio = ttk.Radiobutton(root, text="Euro", variable=units_var, value="Euro")
-euro_radio.grid(row=3, column=1, padx=10, pady=5, sticky="w")
-tl_radio = ttk.Radiobutton(root, text="TL", variable=units_var, value="TL")
-tl_radio.grid(row=4, column=1, padx=10, pady=5, sticky="w")
+    tree.pack(expand=True, fill='both')
 
-# Validate correct date format
-def check_date_format(new_value):
-    # Check if the entered date matches the format DD/MM/YYYY
-    return re.match(r'^\d{2}/\d{2}/\d{4}$', new_value) is not None
+# Function to save hotel data to a CSV file
+def save_to_csv(hotels_data):
+    file_path = "hotels_data.csv"
 
-validate_date = root.register(check_date_format)
-checkin_entry.config(validate="focusout", validatecommand=(validate_date, "%P"))
-checkout_entry.config(validate="focusout", validatecommand=(validate_date, "%P"))
+    fieldnames = ['Name', 'Points', 'Address', 'Distance to Center', 'Price']
+
+    df = pd.DataFrame(hotels_data)
+    df.to_csv(file_path, index=False, encoding='utf-8')
 
 # Create submit button
 submit_button = ttk.Button(root, text="Submit", command=submit)
