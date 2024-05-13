@@ -49,8 +49,28 @@ tl_radio = ttk.Radiobutton(root, text="TL", variable=units_var, value="TL")
 tl_radio.grid(row=4, column=1, padx=10, pady=5, sticky="w")
 
 # Function to validate date format
-def check_date_format(new_value):
-    return re.match(r'^\d{2}/\d{2}/\d{4}$', new_value) is not None
+def check_date_format(date_string):
+    """
+    Check if a date string is in the format "DD/MM/YYYY".
+    
+    Args:
+        date_string (str): The date string to be checked.
+        
+    Returns:
+        bool: True if the date string is in the correct format, False otherwise.
+    """
+    # Regular expression pattern to match "DD/MM/YYYY" format
+    date_pattern = r'^\d{2}/\d{2}/\d{4}$'
+    
+    # Check if the date string matches the pattern
+    match = re.match(date_pattern, date_string)
+    
+    # If there is a match, the date string is in the correct format
+    if match:
+        return True
+    else:
+        return False
+
 
 validate_date = root.register(check_date_format)
 checkin_entry.config(validate="focusout", validatecommand=(validate_date, "%P"))
