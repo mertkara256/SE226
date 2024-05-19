@@ -2,9 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from datetime import datetime
-from tkcalendar import  DateEntry
+from tkcalendar import DateEntry
 import re
-import os
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -14,21 +13,20 @@ import csv
 # Create main application window
 root = tk.Tk()
 root.title("Hotel Booking App")
-root.geometry("450x350")
+root.geometry("450x450")
 root.configure(bg='lightblue')
 
 
 style = ttk.Style()
-style.configure('TLabel', background='lightblue',foreground='black')
+style.configure('TLabel', background='lightblue', foreground='black')
 
 #image
 image_path = "booking.png"
 original_image = Image.open(image_path)
-resized_image = original_image.resize((250,150))
+resized_image = original_image.resize((250, 150))
 image = ImageTk.PhotoImage(resized_image)
 image_label = tk.Label(root, image=image, background="darkblue")
 image_label.grid(row=11, column=1, padx=10, pady=10, sticky="se")
-
 
 # List of 10 random European cities
 european_cities = [
@@ -37,7 +35,7 @@ european_cities = [
 ]
 
 # City Selection
-city_label = ttk.Label(root, text="Select City:" )
+city_label = ttk.Label(root, text="Select City:")
 city_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 city_var = tk.StringVar()
 city_dropdown = ttk.Combobox(root, textvariable=city_var)
@@ -49,7 +47,6 @@ checkin_label = ttk.Label(root, text="Check-in Date:")
 checkin_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 checkin_entry = DateEntry(root, background='darkblue', foreground='white', borderwidth=2, date_pattern='dd/MM/yyyy')
 checkin_entry.grid(row=1, column=1, padx=10, pady=5)
-
 
 # Check-out Date Entry
 checkout_label = ttk.Label(root, text="Check-out Date:")
@@ -89,7 +86,6 @@ def check_date_format(date_string):
     else:
         return False
 
-
 validate_date = root.register(check_date_format)
 checkin_entry.config(validate="focusout", validatecommand=(validate_date, "%P"))
 checkout_entry.config(validate="focusout", validatecommand=(validate_date, "%P"))
@@ -107,6 +103,11 @@ def submit():
         checkout_date = datetime.strptime(checkout_date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
     except ValueError:
         messagebox.showerror("Error", "Invalid date format. Please enter dates in DD/MM/YYYY format.")
+        return
+
+    # Check if checkout date is after check-in date
+    if checkin_date >= checkout_date:
+        messagebox.showerror("Error", "Check-out date must be after the check-in date.")
         return
 
     # URL for the query always using Euro as the currency
@@ -202,12 +203,11 @@ def show_hotel_data(hotels_data):
     tree.heading('Price', text='Price')
 
     for i, hotel in enumerate(sorted_hotels):
-        tree.insert('', 'end', text=str(i+1), values=(hotel['Name'], hotel['Points'], hotel['Address'], hotel['Distance to Center'], hotel['Price']))
-        if (i==4):
+        tree.insert('', 'end', text=str(i + 1), values=(hotel['Name'], hotel['Points'], hotel['Address'], hotel['Distance to Center'], hotel['Price']))
+        if (i == 4):
             break
 
     tree.pack(expand=True, fill='both')
-
 
 # Function to save hotel data to a CSV file
 def save_to_csv(hotels_data):
