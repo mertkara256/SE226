@@ -65,15 +65,6 @@ tl_radio.grid(row=4, column=1, padx=10, pady=5, sticky="w")
 
 # Function to validate date format
 def check_date_format(date_string):
-    """
-    Check if a date string is in the format "DD/MM/YYYY".
-    
-    Args:
-        date_string (str): The date string to be checked.
-        
-    Returns:
-        bool: True if the date string is in the correct format, False otherwise.
-    """
     # Regular expression pattern to match "DD/MM/YYYY" format
     date_pattern = r'^\d{2}/\d{2}/\d{4}$'
     
